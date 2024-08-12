@@ -58,6 +58,7 @@ class TentorgAPI:
                 json_property = json.loads(json_property)
                 response["json_property"] = json_property
             if isinstance(json_property, dict):
+                # Приведение всех дат к единому формату '%d.%m.%Y %H:%M:%S %z'
                 creation_time = datetime.strptime(json_property['creation_time'], "%d.%m.%Y %H:%M:%S %z")
                 json_property['creation_time'] = creation_time.strftime('%d.%m.%Y %H:%M:%S %z')
 
