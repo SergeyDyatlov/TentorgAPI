@@ -1,13 +1,14 @@
 from setuptools import setup, find_packages
 
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
+def parse_requirements(filename):
+    with open(filename, 'r') as f:
+        required = [line.strip() for line in f if line.strip() and not line.startswith('#')]
 
 setup(
     name="tentorgapi",
     version="0.1.0",
     packages=find_packages(),
-    install_requires=required,
+    install_requires=parse_requirements('requirements.txt'),
     url="https://github.com/SergeyDyatlov/TentorgAPI",
     author="Sergey Dyatlov",
     author_email="",
