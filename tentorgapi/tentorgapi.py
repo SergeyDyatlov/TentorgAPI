@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 import json
 import chardet
 import requests
@@ -49,7 +50,26 @@ class TentorgAPI:
     def get_orders(self, page=1):
         response_data = self.make_request(f"order?page={page}")
         decoded_response_data = fix_and_decode(response_data)
-        return decoded_response_data
+        
+        orders = []
+        for response in decoded_response_data:
+            json_property = response.get("json_property", {})
+            if isinstance(json_property, str):
+                json_property = json.loads(json_property)
+                response["json_property"] = json_property
+            if isinstance(json_property, dict):
+                creation_time = datetime.strptime(json_property['creation_time'], "%d.%m.%Y %H:%M:%S %z")
+                json_property['creation_time'] = creation_time.strftime('%d.%m.%Y %H:%M:%S %z')
+
+                tender_start = datetime.strptime(json_property['tender_start'], "%d.%m.%Y %H:%M:%S %z")
+                json_property['tender_start'] = tender_start.strftime('%d.%m.%Y %H:%M:%S %z')
+                
+                tender_end = datetime.fromtimestamp(json_property['tender_end'], tz=timezone(timedelta(hours=3)))
+                json_property['tender_end'] = tender_end.strftime('%d.%m.%Y %H:%M:%S %z')
+
+                orders.append(json.dumps(json_property, indent=4, ensure_ascii=False))
+      
+        return orders
 
 
 def fix_and_decode(data):
@@ -73,23 +93,5 @@ if __name__ == '__main__':
     client = TentorgAPI("user@example.com", "password123")
     client.authenticate()
 
-    response_data = client.get_orders(page=1)
-
-    orders = []
-    for response in response_data:
-        json_property = response.get("json_property", {})
-        if isinstance(json_property, str):
-            json_property = json.loads(json_property)
-            response["json_property"] = json_property
-        if isinstance(json_property, dict):
-            id = json_property.get("id")
-            name = json_property.get("name")
-        
-        orders.append(
-            {
-                "id": id,
-                "name": name,
-            }
-        )
-    
+    orders = client.get_orders(page=1)
     [print(order) for order in orders]
